@@ -39,6 +39,19 @@ app.get('/step/:session', async (req, res, next) => {
   }
 });
 
+app.get('/current_user/:session', async (req, res, next) => {
+  try {
+    const {session} = req.params;
+    const result = await db.all('SELECT * FROM `sessions` WHERE id = ?', session);
+    console.log(result);
+    res.json({
+      user: result[0].value,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.post('/step', async (req, res, next) => {
   try {
     const {user, session, position} = req.body;
@@ -48,8 +61,8 @@ app.post('/step', async (req, res, next) => {
         user, session, position
       ),
       db.all('SELECT * FROM `sessions` WHERE id = ?', session).then(result => {
-        currentUser = result[0].value;
-        return db.run('UPDATE `sessions` SET value = ? WHERE id = ?', currentUser == 1 ? 0 : 1, session);
+        currentUser = result[0].value == 1 ? 0 : 1;
+        return db.run('UPDATE `sessions` SET value = ? WHERE id = ?', currentUser, session);
       })
     ]);
     res.json({
