@@ -2,6 +2,7 @@ const express = require('express');
 const Promise = require('bluebird');
 const bodyParser = require('body-parser');
 const db = require('sqlite');
+const morgan = require('morgan');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -12,11 +13,23 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use(morgan('dev'));
 app.use(bodyParser.json());
 
-app.get('/step', async (req, res, next) => {
+app.post('/create', async (req, res, next) => {
   try {
-    const {session} = req.body;
+    const {lastID} = await db.run('INSERT INTO `sessions` (value) VALUES (1)');
+    res.json({
+      session: lastID
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/step/:session', async (req, res, next) => {
+  try {
+    const {session} = req.params;
     const steps = await db.all('SELECT * FROM steps WHERE session = ?', session);
     res.json({
       steps
@@ -29,11 +42,19 @@ app.get('/step', async (req, res, next) => {
 app.post('/step', async (req, res, next) => {
   try {
     const {user, session, position} = req.body;
-    await db.run('INSERT INTO steps (user, session, position) VALUES (?, ?, ?)',
-      user, session, position
-    );
+    let currentUser = -1;
+    await Promise.all([
+      db.run('INSERT INTO steps (user, session, position) VALUES (?, ?, ?)',
+        user, session, position
+      ),
+      db.all('SELECT * FROM `sessions` WHERE id = ?', session).then(result => {
+        currentUser = result[0].value;
+        return db.run('UPDATE `sessions` SET value = ? WHERE id = ?', currentUser == 1 ? 0 : 1, session);
+      })
+    ]);
     res.json({
-      status: 'ok'
+      status: 'ok',
+      user: currentUser
     });
   } catch (err) {
     next(err);

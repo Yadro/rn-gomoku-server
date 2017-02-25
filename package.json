@@ -7,11 +7,13 @@
     "bluebird": "3.4.7",
     "body-parser": "1.16.1",
     "express": "4.14.1",
+    "morgan": "1.8.1",
     "sqlite": "2.3.0"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node  --harmony-async-await .\\src\\index.js"
   },
   "author": "",
   "license": "ISC"
