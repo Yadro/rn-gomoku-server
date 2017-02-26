@@ -1,24 +1,23 @@
-const express = require('express');
 const Promise = require('bluebird');
-const bodyParser = require('body-parser');
 const db = require('sqlite');
-const morgan = require('morgan');
+const io = require('socket.io')();
+const port = 3000;
 
-const app = require('express')();
-const server = require('http').createServer(app);
-const io = require('socket.io')(server);
-const port = process.env.PORT || 3001;
+io.on('error', (e) => {
+  console.log(e);
+});
 
 io.on('connection', function(client){
   client.on('event', function(data){
     console.log('event', data);
-
+    client.emit('response', {my: 'data'})
   });
 
   client.on('disconnect', function(){
     console.log('disconnect');
   });
 });
+
 
 /*
 app.use(function (req, res, next) {
@@ -90,8 +89,9 @@ app.post('/step', async (req, res, next) => {
 */
 
 Promise.resolve()
-// First, try connect to the database
   .then(() => db.open('db/db.sqlite3', {Promise}))
   .catch(err => console.error(err.stack))
-  // Finally, launch Node.js app
-  .finally(() => app.listen(port));
+  .finally(() => {
+    io.listen(port);
+    console.log('listen on port ' + port);
+  });
