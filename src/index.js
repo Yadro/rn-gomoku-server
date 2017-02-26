@@ -4,9 +4,23 @@ const bodyParser = require('body-parser');
 const db = require('sqlite');
 const morgan = require('morgan');
 
-const app = express();
+const app = require('express')();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 const port = process.env.PORT || 3001;
 
+io.on('connection', function(client){
+  client.on('event', function(data){
+    console.log('event', data);
+
+  });
+
+  client.on('disconnect', function(){
+    console.log('disconnect');
+  });
+});
+
+/*
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -73,7 +87,7 @@ app.post('/step', async (req, res, next) => {
     next(err);
   }
 });
-
+*/
 
 Promise.resolve()
 // First, try connect to the database
