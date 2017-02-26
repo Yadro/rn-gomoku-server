@@ -7,86 +7,105 @@ io.on('error', (e) => {
   console.log(e);
 });
 
-io.on('connection', function(client){
-  client.on('event', function(data){
-    console.log('event', data);
-    client.emit('response', {my: 'data'})
+class Clients {
+  constructor() {
+    this.rooms = [];
+    this.clients = {};
+  }
+
+  createRoom() {
+    const room = this.rooms.length;
+    this.clients[room] = {active: 'master'};
+    return room;
+  }
+
+  setMaster(room, id) {
+    this.clients[room].master = id;
+  }
+
+  getMaster(room) {
+    return this.clients[room].master;
+  }
+
+  setSlave(room, id) {
+    this.clients[room].slave = id;
+  }
+
+  getSlave(room) {
+    return this.clients[room].slave;
+  }
+
+  getRoom(id) {
+    const {clients} = this;
+    for (let room in clients) {
+      const {master, slave} = clients[room];
+      if (master == id) {
+        return {
+          status: 'master',
+          room,
+          master,
+          slave,
+        }
+      }
+      if (slave == id) {
+        return {
+          status: 'slave',
+          room,
+          master,
+          slave,
+        }
+      }
+    }
+    return null;
+  }
+
+  toggleUser(room) {
+    const active = this.clients[room].active == 'master' ? 'slave' : 'master';
+    this.clients[room].active = active;
+    return {
+      id: this.clients[room][active],
+      status: active
+    };
+  }
+}
+
+const clients = new Clients();
+const rooms = [];
+
+io.on('connection', (socket) => {
+
+  socket.on('create', () => {
+    const room = clients.createRoom();
+    clients.setMaster(room, socket.id);
+    console.log('create room', room);
+    socket.join(room).emit('joined', {room});
   });
 
-  client.on('disconnect', function(){
+  socket.on('join', (data) => {
+    console.log(data);
+    const {room} = data;
+    clients.setSlave(room, socket.id);
+    console.log(clients.clients[room]);
+
+    socket.join(room);
+    io.in(room).emit('start');
+  });
+
+  socket.on('step', (data) => {
+    const curRoom = clients.getRoom(socket.id);
+    console.log(curRoom);
+
+    const user = clients.toggleUser(curRoom.room);
+    console.log(`/step room ${curRoom.room} {${user.id}/${user.status}} data:${data}`);
+
+    io.to(curRoom.master).emit('status');
+    io.to(curRoom.slave).emit('status');
+  });
+
+  socket.on('disconnect', function(){
     console.log('disconnect');
   });
 });
-
-
-/*
-app.use(function (req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
-
-app.use(morgan('dev'));
-app.use(bodyParser.json());
-
-app.post('/create', async (req, res, next) => {
-  try {
-    const {lastID} = await db.run('INSERT INTO `sessions` (value) VALUES (0)');
-    res.json({
-      session: lastID
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.get('/step/:session', async (req, res, next) => {
-  try {
-    const {session} = req.params;
-    const steps = await db.all('SELECT * FROM steps WHERE session = ?', session);
-    res.json({
-      steps
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.get('/current_user/:session', async (req, res, next) => {
-  try {
-    const {session} = req.params;
-    const result = await db.all('SELECT * FROM `sessions` WHERE id = ?', session);
-    console.log(result);
-    res.json({
-      user: result[0].value,
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.post('/step', async (req, res, next) => {
-  try {
-    const {user, session, position} = req.body;
-    let currentUser = -1;
-    await Promise.all([
-      db.run('INSERT INTO steps (user, session, position) VALUES (?, ?, ?)',
-        user, session, position
-      ),
-      db.all('SELECT * FROM `sessions` WHERE id = ?', session).then(result => {
-        currentUser = result[0].value == 1 ? 0 : 1;
-        return db.run('UPDATE `sessions` SET value = ? WHERE id = ?', currentUser, session);
-      })
-    ]);
-    res.json({
-      status: 'ok',
-      user: currentUser
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-*/
 
 Promise.resolve()
   .then(() => db.open('db/db.sqlite3', {Promise}))
