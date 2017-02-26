@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 
 app.post('/create', async (req, res, next) => {
   try {
-    const {lastID} = await db.run('INSERT INTO `sessions` (value) VALUES (1)');
+    const {lastID} = await db.run('INSERT INTO `sessions` (value) VALUES (0)');
     res.json({
       session: lastID
     });

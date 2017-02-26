@@ -15,6 +15,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node  --harmony-async-await .\\src\\index.js"
   },
+  "engines": {
+    "node": ">= 7.0.0"
+  },
   "author": "",
   "license": "ISC"
 }
