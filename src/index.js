@@ -16,12 +16,18 @@ class Clients {
   constructor() {
     this.rooms = [];
     this.clients = {};
+    this.steps = {};
   }
 
   createRoom() {
     const room = this.rooms.length;
     this.clients[room] = {active: UserStauts.master};
+    this.steps[room] = [];
     return room;
+  }
+
+  addStep(room, step /* {user, position}*/) {
+    this.steps[room] && this.steps[room].push(step);
   }
 
   setMaster(room, id) {
@@ -79,11 +85,17 @@ const rooms = [];
 
 io.on('connection', (socket) => {
 
-  socket.on('create', () => {
+  socket.on('my_ping', (fn) => {
+    fn();
+    console.log('ping');
+    socket.emit('pong');
+  });
+
+  socket.on('create', (fn) => {
     const room = clients.createRoom();
     clients.setMaster(room, socket.id);
     console.log('connect', socket.id);
-    socket.join(room).emit('joined', {room});
+    fn({room});
   });
 
   socket.on('join', (data) => {
@@ -96,16 +108,17 @@ io.on('connection', (socket) => {
     io.in(room).emit('start');
   });
 
-  socket.on('step', (data) => {
+  socket.on('step', (data, fn) => {
     const curRoom = clients.getRoom(socket.id);
     if (!curRoom) return;
 
-    const user = clients.toggleUser(curRoom.room);
+    const nextUser = clients.toggleUser(curRoom.room);
+    const active = nextUser.status;
+    const waiting = nextUser.status == UserStauts.master ? UserStauts.slave : UserStauts.master;
 
-    console.log(`[room ${curRoom.room}] {${user.status}/${user.id}} /step position:${data.position}`);
+    console.log(`[room ${curRoom.room}] {${socket.id}} /step position:${data.position}`);
+    fn({status: 'ok'});
 
-    const active = user.status;
-    const waiting = user.status == UserStauts.master ? UserStauts.slave : UserStauts.master;
     io.to(curRoom[active]).emit('status', {
       status: 'active',
       position: data.position,

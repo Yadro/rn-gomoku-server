@@ -26,19 +26,15 @@ class ServerApi {
       if (data.status == 'active') {
         console.log('get position', data.position);
         steps.push(data.position);
-        if (steps.length > 20) {
-          console.log(steps);
-          return;
-        }
-        setTimeout(() => {
-          const position = `${getRandom()};${getRandom()}`;
-          steps.push(position);
 
-          console.log('step position', position);
-          this.socket.emit('step', {
-            position,
-          })
-        }, 1000);
+        const position = `${getRandom()};${getRandom()}`;
+        steps.push(position);
+
+        console.log('step position', position);
+        this.socket.emit('step', {
+          position,
+        })
+
       }
     });
   }
