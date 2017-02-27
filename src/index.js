@@ -1,10 +1,10 @@
+const path = require('path');
 const express = require('express');
-
-const PORT = 3001;
+const PORT = 3000;
 const server = express()
   .use((req, res) => {
     console.log('ping');
-    res.sendFile('./index.html')
+    res.sendFile(path.join(__dirname, './index.html'));
   })
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
