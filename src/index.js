@@ -1,6 +1,9 @@
+const app = require('express')();
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 const Promise = require('bluebird');
 const db = require('sqlite');
-const io = require('socket.io')();
+
 const port = 3000;
 
 io.on('error', (e) => {
@@ -85,6 +88,7 @@ const clients = new Clients();
 const rooms = [];
 
 io.on('connection', (socket) => {
+  console.log('connection', socket.id);
 
   socket.on('my_ping', (fn) => {
     fn();
@@ -146,6 +150,6 @@ Promise.resolve()
   .then(() => db.open('db/db.sqlite3', {Promise}))
   .catch(err => console.error(err.stack))
   .finally(() => {
-    io.listen(port);
+    server.listen(port);
     console.log('listen on port ' + port);
   });
