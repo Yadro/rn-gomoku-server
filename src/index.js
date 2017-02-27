@@ -1,6 +1,7 @@
 const path = require('path');
 const express = require('express');
 const PORT = process.env.PORT || 3000;
+
 const server = express()
   .use((req, res) => {
     console.log('ping');
@@ -9,8 +10,11 @@ const server = express()
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const io = require('socket.io')(server);
-/*const Promise = require('bluebird');
-const db = require('sqlite');*/
+
+io.configure(function () {
+  io.set("transports", ["xhr-polling"]);
+  io.set("polling duration", 10);
+});
 
 
 
