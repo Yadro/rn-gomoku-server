@@ -7,16 +7,13 @@ const PORT = process.env.PORT || 3000;
 const INDEX = path.join(__dirname, 'index.html');
 
 const server = express()
-  .use((req, res) => res.sendFile(INDEX) )
+  .use((req, res) => {
+    console.log('ping');
+    res.sendFile(INDEX)
+  })
   .listen(PORT, () => console.log(`Listening on ${ PORT }`));
 
 const io = socketIO(server);
-
-
-io.on('error', (e) => {
-  console.log(e);
-});
-setInterval(() => io.emit('time', new Date().toTimeString()), 1000);
 
 const UserStauts = {
   master: 'master',
@@ -153,6 +150,11 @@ io.on('connection', (socket) => {
     console.log('disconnect');
   });
 });
+
+io.on('error', (e) => {
+  console.log(e);
+});
+setInterval(() => io.emit('time', new Date().toTimeString()), 1000);
 
 /*Promise.resolve()
   .then(() => db.open('db/db.sqlite3', {Promise}))
