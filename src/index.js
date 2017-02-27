@@ -20,7 +20,8 @@ class Clients {
   }
 
   createRoom() {
-    const room = this.rooms.length;
+    const room = '' + this.rooms.length;
+    this.rooms.push(room);
     this.clients[room] = {active: UserStauts.master};
     this.steps[room] = [];
     return room;
@@ -98,14 +99,22 @@ io.on('connection', (socket) => {
     fn({room});
   });
 
-  socket.on('join', (data) => {
-    const {room} = data;
-    if (!room) return;
+  socket.on('join', (data, fn) => {
+    console.dir('try join');
+    console.dir(data);
 
-    console.log('connect', socket.id);
+    const {room} = data;
+    if (room == null) return;
+    fn();
+
     clients.setSlave(room, socket.id);
     socket.join(room);
-    io.in(room).emit('start');
+    console.log('connect', socket.id);
+
+    console.dir(clients);
+    const curRoom = clients.getRoom(socket.id);
+    io.to(curRoom.master).emit('start');
+    io.to(curRoom.slave).emit('start');
   });
 
   socket.on('step', (data, fn) => {

@@ -17,9 +17,7 @@ class ServerApi {
     this.socket.on('start', (data) => {
       console.log('start', data);
       console.log('step');
-      this.socket.emit('step', {
-        position: `${getRandom()};${getRandom()}`,
-      });
+      this.socket.emit('step', {position: `${getRandom()};${getRandom()}`}, () => {});
     });
 
     this.socket.on('status', (data) => {
@@ -31,10 +29,7 @@ class ServerApi {
         steps.push(position);
 
         console.log('step position', position);
-        this.socket.emit('step', {
-          position,
-        })
-
+        this.socket.emit('step', {position}, () => {})
       }
     });
   }
@@ -42,12 +37,13 @@ class ServerApi {
   create() {
     this.socket.emit('create', ({room}) => {
       this.room = room;
+      console.log('create room ', room);
     });
   }
 }
 
 function getRandom() {
-  return Math.floor(Math.random() * 100);
+  return Math.floor(Math.random() * 20);
 }
 
 function onChangeStatus(data) {
