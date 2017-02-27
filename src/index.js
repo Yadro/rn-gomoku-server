@@ -1,19 +1,22 @@
 'use strict';
 const express = require('express');
-const socketIO = require('socket.io');
 const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const INDEX = path.join(__dirname, 'index.html');
 
-const server = express()
-  .use((req, res) => {
-    console.log('ping');
-    res.sendFile(INDEX)
-  })
-  .listen(PORT, () => console.log(`Listening on ${ PORT }`));
+const app = express();
+app.use(express.static(__dirname + '/public'));
 
-const io = socketIO(server);
+
+app.get('/', function (req, res) {
+  res.render('index');
+});
+
+const server = app.listen(PORT, function () {
+  console.log('listen port ' + PORT + '\n');
+});
+
+const io = require('socket.io')(server);
 
 const UserStauts = {
   master: 'master',
