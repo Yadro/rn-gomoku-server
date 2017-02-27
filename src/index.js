@@ -22,6 +22,7 @@ const server = app.listen(PORT, function () {
 });
 
 const io = require('socket.io')(server);
+io.set('transports', [ 'websocket' ]);
 
 const UserStauts = {
   master: 'master',
