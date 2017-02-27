@@ -4,7 +4,7 @@ const PORT = 3001;
 const server = express()
   .use((req, res) => {
     console.log('ping');
-    res.sendFile(INDEX)
+    res.sendFile('./index.html')
   })
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
