@@ -22,6 +22,7 @@ const server = app.listen(PORT, function () {
 });
 
 const io = require('socket.io')(server);
+io.set("origins","*:*");
 // io.set('transports', [ 'websocket' ]);
 
 const UserStauts = {
