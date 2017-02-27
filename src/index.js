@@ -1,21 +1,16 @@
-const path = require('path');
+'use strict';
 const express = require('express');
+const socketIO = require('socket.io');
+const path = require('path');
+
 const PORT = process.env.PORT || 3000;
+const INDEX = path.join(__dirname, 'index.html');
 
 const server = express()
-  .use((req, res) => {
-    console.log('ping');
-    res.sendFile(path.join(__dirname, './index.html'));
-  })
-  .listen(PORT, () => console.log(`Listening on ${PORT}`));
+  .use((req, res) => res.sendFile(INDEX) )
+  .listen(PORT, () => console.log(`Listening on ${ PORT }`));
 
-const io = require('socket.io')(server);
-
-io.configure(function () {
-  io.set("transports", ["xhr-polling"]);
-  io.set("polling duration", 10);
-});
-
+const io = socketIO(server);
 
 
 io.on('error', (e) => {
