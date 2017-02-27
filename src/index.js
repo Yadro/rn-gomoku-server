@@ -1,10 +1,15 @@
-const app = require('express')();
-const server = require('http').createServer(app);
-const io = require('socket.io')(server);
-const Promise = require('bluebird');
-const db = require('sqlite');
+const express = require('express');
 
 const port = 3000;
+const server = express()
+  .use((req, res) => res.sendFile(INDEX) )
+  .listen(port, () => console.log(`Listening on ${port}`));
+
+const io = require('socket.io')(server);
+/*const Promise = require('bluebird');
+const db = require('sqlite');*/
+
+
 
 io.on('error', (e) => {
   console.log(e);
@@ -146,10 +151,10 @@ io.on('connection', (socket) => {
   });
 });
 
-Promise.resolve()
+/*Promise.resolve()
   .then(() => db.open('db/db.sqlite3', {Promise}))
   .catch(err => console.error(err.stack))
   .finally(() => {
     server.listen(port);
     console.log('listen on port ' + port);
-  });
+  });*/
