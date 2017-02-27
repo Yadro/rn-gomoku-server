@@ -1,5 +1,6 @@
 const express = require('express');
 
+const PORT = 3001;
 const server = express()
   .use((req, res) => {
     console.log('ping');
