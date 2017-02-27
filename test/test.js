@@ -1,6 +1,7 @@
 const io = require('socket.io-client');
 
-const url = 'ws://localhost:3000';
+const url = 'https://gomokus.herokuapp.com:3000';
+console.log('trying connect to ', url);
 
 const steps = [];
 class ServerApi {
