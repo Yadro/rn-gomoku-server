@@ -2,7 +2,9 @@ const io = require('socket.io-client');
 
 const url = 'ws://localhost:3000';
 
+const steps = [];
 class ServerApi {
+
 
   constructor(onChangeStatus) {
     this.socket = io.connect(url);
@@ -14,14 +16,30 @@ class ServerApi {
 
     this.socket.on('start', (data) => {
       console.log('start', data);
+      console.log('step');
       this.socket.emit('step', {
-        user: 'master',
-        position: '0;1'
+        position: `${getRandom()};${getRandom()}`,
       });
     });
 
     this.socket.on('status', (data) => {
-      this.onChangeStatus(data);
+      if (data.status == 'active') {
+        console.log('get position', data.position);
+        steps.push(data.position);
+        if (steps.length > 20) {
+          console.log(steps);
+          return;
+        }
+        setTimeout(() => {
+          const position = `${getRandom()};${getRandom()}`;
+          steps.push(position);
+
+          console.log('step position', position);
+          this.socket.emit('step', {
+            position,
+          })
+        }, 1000);
+      }
     });
   }
 
@@ -32,6 +50,9 @@ class ServerApi {
   }
 }
 
+function getRandom() {
+  return Math.floor(Math.random() * 100);
+}
 
 function onChangeStatus(data) {
   console.log(data);

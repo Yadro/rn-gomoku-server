@@ -7,6 +7,11 @@ io.on('error', (e) => {
   console.log(e);
 });
 
+const UserStauts = {
+  master: 'master',
+  slave: 'slave',
+};
+
 class Clients {
   constructor() {
     this.rooms = [];
@@ -15,7 +20,7 @@ class Clients {
 
   createRoom() {
     const room = this.rooms.length;
-    this.clients[room] = {active: 'master'};
+    this.clients[room] = {active: UserStauts.master};
     return room;
   }
 
@@ -41,7 +46,7 @@ class Clients {
       const {master, slave} = clients[room];
       if (master == id) {
         return {
-          status: 'master',
+          status: UserStauts.master,
           room,
           master,
           slave,
@@ -49,7 +54,7 @@ class Clients {
       }
       if (slave == id) {
         return {
-          status: 'slave',
+          status: UserStauts.slave,
           room,
           master,
           slave,
@@ -60,7 +65,7 @@ class Clients {
   }
 
   toggleUser(room) {
-    const active = this.clients[room].active == 'master' ? 'slave' : 'master';
+    const active = this.clients[room].active == UserStauts.master ? UserStauts.slave : UserStauts.master;
     this.clients[room].active = active;
     return {
       id: this.clients[room][active],
@@ -77,29 +82,37 @@ io.on('connection', (socket) => {
   socket.on('create', () => {
     const room = clients.createRoom();
     clients.setMaster(room, socket.id);
-    console.log('create room', room);
+    console.log('connect', socket.id);
     socket.join(room).emit('joined', {room});
   });
 
   socket.on('join', (data) => {
-    console.log(data);
     const {room} = data;
-    clients.setSlave(room, socket.id);
-    console.log(clients.clients[room]);
+    if (!room) return;
 
+    console.log('connect', socket.id);
+    clients.setSlave(room, socket.id);
     socket.join(room);
     io.in(room).emit('start');
   });
 
   socket.on('step', (data) => {
     const curRoom = clients.getRoom(socket.id);
-    console.log(curRoom);
+    if (!curRoom) return;
 
     const user = clients.toggleUser(curRoom.room);
-    console.log(`/step room ${curRoom.room} {${user.id}/${user.status}} data:${data}`);
 
-    io.to(curRoom.master).emit('status');
-    io.to(curRoom.slave).emit('status');
+    console.log(`[room ${curRoom.room}] {${user.status}/${user.id}} /step position:${data.position}`);
+
+    const active = user.status;
+    const waiting = user.status == UserStauts.master ? UserStauts.slave : UserStauts.master;
+    io.to(curRoom[active]).emit('status', {
+      status: 'active',
+      position: data.position,
+    });
+    io.to(curRoom[waiting]).emit('status', {
+      status: 'waiting',
+    });
   });
 
   socket.on('disconnect', function(){

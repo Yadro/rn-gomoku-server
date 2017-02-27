@@ -15,12 +15,29 @@ socket.on('joined', () => {
 
 socket.on('start', (data) => {
   console.log('start', data);
-  socket.emit('step', {
-    user: 'slave',
-    position: '0;1'
-  });
 });
 
+const steps = [];
 socket.on('status', (data) => {
-  console.log('status');
+  if (data.status == 'active') {
+    console.log('get position', data.position);
+    steps.push(data.position);
+    if (steps.length > 20) {
+      console.log(steps);
+      return;
+    }
+    setTimeout(() => {
+      const position = `${getRandom()};${getRandom()}`;
+
+      console.log('step position', position);
+      steps.push(position);
+      socket.emit('step', {
+        position,
+      })
+    }, 1000);
+  }
 });
+
+function getRandom() {
+  return Math.floor(Math.random() * 100);
+}
