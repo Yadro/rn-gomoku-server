@@ -1,9 +1,11 @@
 const express = require('express');
 
-const port = 3000;
 const server = express()
-  .use((req, res) => res.sendFile(INDEX) )
-  .listen(port, () => console.log(`Listening on ${port}`));
+  .use((req, res) => {
+    console.log('ping');
+    res.sendFile(INDEX)
+  })
+  .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const io = require('socket.io')(server);
 /*const Promise = require('bluebird');
@@ -14,6 +16,7 @@ const db = require('sqlite');*/
 io.on('error', (e) => {
   console.log(e);
 });
+setInterval(() => io.emit('time', new Date().toTimeString()), 1000);
 
 const UserStauts = {
   master: 'master',
