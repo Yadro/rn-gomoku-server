@@ -40,7 +40,7 @@ class Clients {
   createRoom() {
     const room = '' + this.rooms.length;
     this.rooms.push(room);
-    this.clients[room] = {active: UserStauts.master};
+    this.clients[room] = {active: UserStauts.master, end: false};
     this.steps[room] = [];
     return room;
   }
@@ -49,8 +49,10 @@ class Clients {
     this.steps[room] && this.steps[room].push(step);
   }
 
-  setMaster(room, id) {
+  createRoomSetMaster(id) {
+    const room = this.createRoom();
     this.clients[room].master = id;
+    return room;
   }
 
   getMaster(room) {
@@ -58,7 +60,11 @@ class Clients {
   }
 
   setSlave(room, id) {
-    this.clients[room].slave = id;
+    if (this.clients[room] && this.clients[room].slave == null) {
+      this.clients[room].slave = id;
+      return true;
+    }
+    return false
   }
 
   getSlave(room) {
@@ -112,25 +118,22 @@ io.on('connection', (socket) => {
   });
 
   socket.on('create', (fn) => {
-    const room = clients.createRoom();
-    clients.setMaster(room, socket.id);
+    const room = clients.createRoomSetMaster(socket.id);
     console.log('connect', socket.id);
     fn({room});
   });
 
   socket.on('join', (data, fn) => {
-    console.dir('try join');
-    console.dir(data);
-
     const {room} = data;
-    if (room == null) return;
-    fn();
-
-    clients.setSlave(room, socket.id);
+    if (!clients.setSlave(room, socket.id)) {
+      return;
+    }
     socket.join(room);
-    console.log('connect', socket.id);
+    fn({room});
 
+    console.log('connect', socket.id);
     console.dir(clients);
+
     const curRoom = clients.getRoom(socket.id);
     io.to(curRoom.master).emit('start');
     io.to(curRoom.slave).emit('start');

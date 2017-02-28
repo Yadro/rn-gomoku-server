@@ -1,6 +1,8 @@
 const io = require('socket.io-client');
 
-const url = 'https://gomokus.herokuapp.com:3000';
+const url = 'wss://gomokus.herokuapp.com';
+// const url = 'ws://localhost:3000';
+
 console.log('trying connect to ', url);
 
 const steps = [];
@@ -8,8 +10,23 @@ class ServerApi {
 
 
   constructor(onChangeStatus) {
-    this.socket = io.connect(url);
+    this.socket = io.connect(url, {});
     this.onChangeStatus = onChangeStatus;
+
+    this.socket.on('connect_error', function(){
+      console.log('Connection Failed');
+    });
+    this.socket.on('connect', function(){
+      console.log('Connected');
+    });
+    this.socket.on('disconnect', function () {
+      console.log('Disconnected');
+    });
+
+    this.socket.on('time', (data) => {
+      console.log('time');
+      console.dir(data);
+    });
 
     this.socket.on('joined', ({room}) => {
       console.log('joined', room);

@@ -1,6 +1,9 @@
 const io = require('socket.io-client');
 
-const url = 'ws://localhost:3000';
+
+const url = 'wss://gomokus.herokuapp.com';
+// const url = 'ws://localhost:3000';
+
 console.log('trying connect to ', url);
 const socket = io.connect(url);
 
