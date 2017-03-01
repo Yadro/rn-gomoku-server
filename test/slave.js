@@ -1,8 +1,8 @@
 const io = require('socket.io-client');
 
 
-const url = 'wss://gomokus.herokuapp.com';
-// const url = 'ws://localhost:3000';
+// const url = 'wss://gomokus.herokuapp.com';
+const url = 'ws://localhost:3000';
 
 console.log('trying connect to ', url);
 const socket = io.connect(url);
@@ -25,7 +25,11 @@ socket.on('start', (data) => {
 
 const steps = [];
 socket.on('status', (data) => {
-  if (data.status == 'active') {
+  if (data.status == 'win') {
+    console.log('win');
+  } else if (data.status == 'lose') {
+    console.log('lose');
+  } else if (data.status == 'active') {
     console.log('get position', data.position);
     steps.push(data.position);
 

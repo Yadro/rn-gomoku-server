@@ -25,10 +25,17 @@ const io = require('socket.io')(server);
 io.set("origins","*:*");
 // io.set('transports', [ 'websocket' ]);
 
-const UserStauts = {
+const UserStatus = {
   master: 'master',
   slave: 'slave',
 };
+
+const UserSteps = {
+  master: 1,
+  slave: 2,
+};
+
+const count = 20;
 
 class Clients {
   constructor() {
@@ -37,16 +44,85 @@ class Clients {
     this.steps = {};
   }
 
+  static createField() {
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      arr.push(new Array(count));
+    }
+    return arr;
+  }
+
+  check(room, user) {
+    const iRoom = this.clients[room];
+    const userType = UserSteps[user];
+    const {field} = iRoom;
+    return this.checkWin(field, userType);
+  }
+
+  checkWin(field, user) {
+    const height = field.length;
+    const width = field[0].length;
+
+    function check(x, y, dX, dY) {
+      for (let _x = x + dX, _y = y + dY; ; _x += dX, _y +=dY) {
+        if (field[_y][_x] != user) {
+          return false;
+        }
+        if (_x >= x + 4 || _y >= y + 4) break;
+      }
+      return true;
+    }
+
+    var y, x;
+    for (y = 0; y < height; y++) {
+      for (x = 0; x < width; x++) {
+        if (field[y][x] == user) {
+          if (y + 4 < height && x + 4 < width) {
+            // right diagonal
+            if (check(x, y, 1, 1)) {
+              return true;
+            }
+            if (x - 4 >= 0) {
+              // left diagonal
+              if (check(x, y, -1, 1)) {
+                return true;
+              }
+            }
+          }
+          if (x + 4 < width) {
+            // right
+            if (check(x, y, 1, 0)) {
+              return true;
+            }
+          }
+          if (y + 4 < height) {
+            // down
+            if (check(x, y, 0, 1)) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   createRoom() {
     const room = '' + this.rooms.length;
     this.rooms.push(room);
-    this.clients[room] = {active: UserStauts.master, end: false};
+    this.clients[room] = {
+      active: UserStatus.master,
+      end: false,
+      field: Clients.createField()
+    };
     this.steps[room] = [];
     return room;
   }
 
-  addStep(room, step /* {user, position}*/) {
-    this.steps[room] && this.steps[room].push(step);
+  addStep(room, position, user) {
+    const {field} = this.clients[room];
+    const [x, y] = position.split(';');
+    field[+y][+x] = UserSteps[user];
   }
 
   createRoomSetMaster(id) {
@@ -77,7 +153,7 @@ class Clients {
       const {master, slave} = clients[room];
       if (master == id) {
         return {
-          status: UserStauts.master,
+          status: UserStatus.master,
           room,
           master,
           slave,
@@ -85,7 +161,7 @@ class Clients {
       }
       if (slave == id) {
         return {
-          status: UserStauts.slave,
+          status: UserStatus.slave,
           room,
           master,
           slave,
@@ -96,7 +172,7 @@ class Clients {
   }
 
   toggleUser(room) {
-    const active = this.clients[room].active == UserStauts.master ? UserStauts.slave : UserStauts.master;
+    const active = this.clients[room].active == UserStatus.master ? UserStatus.slave : UserStatus.master;
     this.clients[room].active = active;
     return {
       id: this.clients[room][active],
@@ -126,6 +202,7 @@ io.on('connection', (socket) => {
   socket.on('join', (data, fn) => {
     const {room} = data;
     if (!clients.setSlave(room, socket.id)) {
+      fn();
       return;
     }
     socket.join(room);
@@ -143,19 +220,25 @@ io.on('connection', (socket) => {
     const curRoom = clients.getRoom(socket.id);
     if (!curRoom) return;
 
+    clients.addStep(curRoom.room, data.position, curRoom.status);
+    const isWin = clients.check(curRoom.room, curRoom.status);
+    if (isWin) {
+      console.log(`${socket.id} - ${curRoom.status} - win ************************`);
+    }
+
     const nextUser = clients.toggleUser(curRoom.room);
     const active = nextUser.status;
-    const waiting = nextUser.status == UserStauts.master ? UserStauts.slave : UserStauts.master;
+    const waiting = nextUser.status == UserStatus.master ? UserStatus.slave : UserStatus.master;
 
     console.log(`[room ${curRoom.room}] {${socket.id}} /step position:${data.position}`);
     fn({status: 'ok'});
 
     io.to(curRoom[active]).emit('status', {
-      status: 'active',
+      status: isWin ? 'lose' : 'active',
       position: data.position,
     });
     io.to(curRoom[waiting]).emit('status', {
-      status: 'waiting',
+      status: isWin ? 'win' : 'waiting',
     });
   });
 

@@ -51,7 +51,7 @@ function checkWin(field, user) {
 function createField() {
   const arr = [];
   for (let i = 0; i < size; i++) {
-    arr.push([]);
+    arr.push(new Array(size));
   }
   return arr;
 }
@@ -64,7 +64,6 @@ function gen() {
     for (var j = 0; j < size; j++) {
       const inp = document.createElement('input');
       inp.type = 'checkbox';
-      field[i][j] = false;
       ((i, j) => {
         inp.addEventListener('click', () => {
           field[i][j] = !field[i][j];
