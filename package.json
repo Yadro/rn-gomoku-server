@@ -17,7 +17,6 @@
     "typescript": "2.2.1"
   },
   "scripts": {
-    "heroku-prebuild": "tsc -w --pretty",
     "build": "tsc -w --pretty",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node  --harmony-async-await ./build/index.js",
