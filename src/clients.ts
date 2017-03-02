@@ -1,4 +1,20 @@
-class Clients {
+export const UserSteps = {
+  master: 1,
+  slave: 2,
+};
+
+export const UserStatus = {
+  master: 'master',
+  slave: 'slave',
+};
+
+export const count = 20;
+
+export class Clients {
+  rooms;
+  clients;
+  steps;
+
   constructor() {
     this.rooms = [];
     this.clients = {};
@@ -141,5 +157,3 @@ class Clients {
     };
   }
 }
-
-module.exports.Clients = Clients;

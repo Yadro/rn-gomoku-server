@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const path = require('path');
-const {Clients} = require('./clients');
+import {Clients, UserStatus, UserSteps} from './clients';
 
 const PORT = process.env.PORT || 3000;
 
@@ -26,21 +26,8 @@ const io = require('socket.io')(server);
 io.set("origins","*:*");
 // io.set('transports', [ 'websocket' ]);
 
-const UserStatus = {
-  master: 'master',
-  slave: 'slave',
-};
-
-const UserSteps = {
-  master: 1,
-  slave: 2,
-};
-
-const count = 20;
-
 
 const clients = new Clients();
-const rooms = [];
 
 io.on('connection', (socket) => {
   console.log('connection', socket.id);

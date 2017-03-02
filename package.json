@@ -11,10 +11,14 @@
     "socket.io": "1.7.3",
     "sqlite": "2.3.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "typescript": "2.2.1"
+  },
   "scripts": {
+    "build": "tsc -w --pretty",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node  --harmony-async-await ./src/index.js",
+    "start": "node  --harmony-async-await ./build/index.js",
     "log": "heroku logs --tail --app gomokus"
   },
   "engines": {
