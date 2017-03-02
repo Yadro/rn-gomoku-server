@@ -54,7 +54,7 @@ io.on('connection', (socket) => {
     fn({room});
 
     console.log('connect', socket.id);
-    console.dir(clients);
+    console.dir(clients._getRoom(room));
 
     const curRoom = clients.getRoom(socket.id);
     io.to(curRoom.master).emit('start');
@@ -87,7 +87,8 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('disconnect', function(){
+  socket.on('disconnect', () => {
+    clients.disconnect(socket.id);
     console.log('disconnect');
   });
 });

@@ -52,6 +52,10 @@ export class Clients {
     return room;
   }
 
+  _getRoom(id) {
+    return this.clients[id];
+  }
+
   addStep(room: RoomId, position: string, user) {
     const field = this.steps[room];
     const [x, y] = position.split(';');
@@ -111,6 +115,34 @@ export class Clients {
       id: this.clients[room][active],
       status: active
     };
+  }
+
+  disconnect(userId) {
+    const {clients} = this;
+    const roomId = this.getRoomByUser(userId);
+    if (!roomId) return;
+    const room = clients[roomId];
+
+    if (room.master == userId) {
+      room.master = null;
+    } else if (room.slave == userId) {
+      room.slave = null;
+    }
+    if (!(room.master && room.slave)) {
+      room.end = true;
+      delete this.steps[roomId];
+    }
+  }
+
+  private getRoomByUser(id) {
+    const {clients} = this;
+    for (let room in clients) {
+      const {master, slave} = clients[room];
+      if (master == id || slave == id) {
+        return room;
+      }
+    }
+    return false;
   }
 
   check(room, user) {
