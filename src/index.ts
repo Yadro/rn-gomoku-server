@@ -41,6 +41,7 @@ io.on('connection', (socket) => {
   socket.on('create', (fn) => {
     const room = clients.createRoomSetMaster(socket.id);
     console.log('connect', socket.id);
+    console.log('create', room);
     fn({room});
   });
 
@@ -89,7 +90,7 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     clients.disconnect(socket.id);
-    console.log('disconnect');
+    console.log('disconnect', socket.id);
   });
 });
 
