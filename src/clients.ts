@@ -1,3 +1,5 @@
+export const count = 20;
+
 export const UserSteps = {
   master: 1,
   slave: 2,
@@ -8,12 +10,20 @@ export const UserStatus = {
   slave: 'slave',
 };
 
-export const count = 20;
+interface Client {
+  master;
+  slave;
+  active;
+  end;
+}
+
+type Field = any[][];
+type RoomId = string;
 
 export class Clients {
-  rooms;
-  clients;
-  steps;
+  rooms: string[];
+  clients: {[key: string]: Client};
+  steps: {[key: string]: Field};
 
   constructor() {
     this.rooms = [];
@@ -29,14 +39,87 @@ export class Clients {
     return arr;
   }
 
+  createRoom() {
+    const room = '' + this.rooms.length;
+    this.rooms.push(room);
+    this.steps[room] = Clients.createField();
+    this.clients[room] = {
+      active: UserStatus.master,
+      master: null,
+      slave: null,
+      end: false
+    };
+    return room;
+  }
+
+  addStep(room: RoomId, position: string, user) {
+    const field = this.steps[room];
+    const [x, y] = position.split(';');
+    field[+y][+x] = UserSteps[user];
+  }
+
+  createRoomSetMaster(id) {
+    const room = this.createRoom();
+    this.clients[room].master = id;
+    return room;
+  }
+
+  getMaster(room: RoomId) {
+    return this.clients[room].master;
+  }
+
+  setSlave(room: RoomId, id) {
+    if (this.clients[room] && this.clients[room].slave == null) {
+      this.clients[room].slave = id;
+      return true;
+    }
+    return false
+  }
+
+  getSlave(room: RoomId) {
+    return this.clients[room].slave;
+  }
+
+  getRoom(userId) {
+    const {clients} = this;
+    for (let room in clients) {
+      const {master, slave} = clients[room];
+      if (master == userId) {
+        return {
+          status: UserStatus.master,
+          room,
+          master,
+          slave,
+        }
+      }
+      if (slave == userId) {
+        return {
+          status: UserStatus.slave,
+          room,
+          master,
+          slave,
+        }
+      }
+    }
+    return null;
+  }
+
+  toggleUser(room) {
+    const active = this.clients[room].active == UserStatus.master ? UserStatus.slave : UserStatus.master;
+    this.clients[room].active = active;
+    return {
+      id: this.clients[room][active],
+      status: active
+    };
+  }
+
   check(room, user) {
-    const iRoom = this.clients[room];
+    const field = this.steps[room];
     const userType = UserSteps[user];
-    const {field} = iRoom;
     return this.checkWin(field, userType);
   }
 
-  checkWin(field, user) {
+  private checkWin(field, user) {
     const height = field.length;
     const width = field[0].length;
 
@@ -83,77 +166,5 @@ export class Clients {
     }
     return false;
   }
-
-  createRoom() {
-    const room = '' + this.rooms.length;
-    this.rooms.push(room);
-    this.clients[room] = {
-      active: UserStatus.master,
-      end: false,
-      field: Clients.createField()
-    };
-    this.steps[room] = [];
-    return room;
-  }
-
-  addStep(room, position, user) {
-    const {field} = this.clients[room];
-    const [x, y] = position.split(';');
-    field[+y][+x] = UserSteps[user];
-  }
-
-  createRoomSetMaster(id) {
-    const room = this.createRoom();
-    this.clients[room].master = id;
-    return room;
-  }
-
-  getMaster(room) {
-    return this.clients[room].master;
-  }
-
-  setSlave(room, id) {
-    if (this.clients[room] && this.clients[room].slave == null) {
-      this.clients[room].slave = id;
-      return true;
-    }
-    return false
-  }
-
-  getSlave(room) {
-    return this.clients[room].slave;
-  }
-
-  getRoom(id) {
-    const {clients} = this;
-    for (let room in clients) {
-      const {master, slave} = clients[room];
-      if (master == id) {
-        return {
-          status: UserStatus.master,
-          room,
-          master,
-          slave,
-        }
-      }
-      if (slave == id) {
-        return {
-          status: UserStatus.slave,
-          room,
-          master,
-          slave,
-        }
-      }
-    }
-    return null;
-  }
-
-  toggleUser(room) {
-    const active = this.clients[room].active == UserStatus.master ? UserStatus.slave : UserStatus.master;
-    this.clients[room].active = active;
-    return {
-      id: this.clients[room][active],
-      status: active
-    };
-  }
 }
+
